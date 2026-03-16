@@ -418,18 +418,20 @@
             flex-wrap: wrap;
         }
         .legend-item {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
             color: #415A77;
             font-weight: 600;
-            white-space: nowrap;
         }
         .legend-box {
-            width: 18px;
-            height: 18px;
+            display: inline-block;
+            width: 12px;
+            height: 12px;
             border-radius: 2px;
             flex-shrink: 0;
+            margin: 0;
+            padding: 0;
         }
         .legend-box.customer {
             background: #FFB703;
