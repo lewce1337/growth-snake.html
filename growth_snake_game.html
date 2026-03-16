@@ -409,38 +409,6 @@
             margin: 10px 0;
             color: #415A77;
         }
-        .legend {
-            display: flex;
-            justify-content: center;
-            gap: 80px;
-            margin: 20px 0;
-            font-size: 0.9em;
-            flex-wrap: wrap;
-        }
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #415A77;
-            font-weight: 600;
-        }
-        .legend-box {
-            width: 16px;
-            height: 16px;
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
-        .legend-box.customer {
-            background: #FFB703;
-            border-radius: 50%;
-        }
-        .legend-box.obstacle {
-            background: #D62828;
-        }
-        .legend-box.powerup {
-            background: linear-gradient(135deg, #06FFA5 0%, #00D084 100%);
-            border-radius: 50%;
-        }
         .powerup-info {
             background: linear-gradient(135deg, #FFFBF3 0%, #FFF8F0 100%);
             border-left: 4px solid #FFB703;
@@ -536,17 +504,6 @@
                 <button id="startBtn" onclick="startGame()">Start Game</button>
                 <button id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
                 <button id="resetBtn" onclick="resetGame()">Reset</button>
-            </div>
-        </div>
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-box customer"></div>
-            </div>
-            <div class="legend-item">
-                <div class="legend-box obstacle"></div>
-            </div>
-            <div class="legend-item">
-                <div class="legend-box powerup"></div>
             </div>
         </div>
         <div class="stats">
