@@ -58,6 +58,11 @@
             letter-spacing: 0.5px;
         }
 
+        .game-section {
+            margin: 20px auto;
+            max-width: 700px;
+        }
+
         #gameContainer {
             position: relative;
             width: 700px;
@@ -65,7 +70,6 @@
             background: linear-gradient(135deg, #F8F9FA 0%, #E8EEF5 100%);
             border: 3px solid #0D1B2A;
             border-radius: 15px;
-            margin: 20px auto;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(13, 27, 42, 0.15);
         }
@@ -103,6 +107,10 @@
             border-radius: 50%;
             box-shadow: 0 0 12px rgba(251, 133, 0, 0.7);
             animation: pulse 0.8s infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
         }
 
         @keyframes pulse {
@@ -117,21 +125,24 @@
             background: linear-gradient(135deg, #D62828 0%, #9B2226 100%);
             border-radius: 2px;
             box-shadow: 0 0 10px rgba(214, 40, 40, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
         }
 
         .powerup {
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             box-shadow: 0 0 15px rgba(100, 181, 246, 0.9);
             animation: powerup-glow 0.6s infinite;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            font-size: 14px;
             font-weight: bold;
-            color: white;
         }
 
         .powerup.mentor {
@@ -588,22 +599,24 @@
         <h1>Growth Snake</h1>
         <p class="subtitle">Your Startup's Journey to Success</p>
 
-        <div id="gameContainer">
-            <div class="game-canvas" id="gameCanvas"></div>
-            <div class="game-over" id="gameOver">
-                <h2>Game Over! 💔</h2>
-                <p id="gameOverMessage"></p>
-                <p>Final Size: <strong id="finalSize">0</strong></p>
-                <p>Customers Acquired: <strong id="finalCustomers">0</strong></p>
-                <p>Power-ups Collected: <strong id="finalPowerups">0</strong></p>
-                <p>Monthly Users Reached: <strong id="finalMonthlyUsers">0</strong></p>
+        <div class="game-section">
+            <div id="gameContainer">
+                <div class="game-canvas" id="gameCanvas"></div>
+                <div class="game-over" id="gameOver">
+                    <h2>Game Over! 💔</h2>
+                    <p id="gameOverMessage"></p>
+                    <p>Final Size: <strong id="finalSize">0</strong></p>
+                    <p>Customers Acquired: <strong id="finalCustomers">0</strong></p>
+                    <p>Power-ups Collected: <strong id="finalPowerups">0</strong></p>
+                    <p>Monthly Users Reached: <strong id="finalMonthlyUsers">0</strong></p>
+                </div>
             </div>
-        </div>
 
-        <div class="buttons-under-game">
-            <button id="startBtn" onclick="startGame()">Start Game</button>
-            <button id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
-            <button id="resetBtn" onclick="resetGame()">Reset</button>
+            <div class="buttons-under-game">
+                <button id="startBtn" onclick="startGame()">Start Game</button>
+                <button id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
+                <button id="resetBtn" onclick="resetGame()">Reset</button>
+            </div>
         </div>
 
         <div class="legend">
@@ -702,7 +715,7 @@
                 <li><strong>⌨️ Arrow Keys or WASD</strong> – Move your startup</li>
                 <li><strong>🟠 Orange Dots</strong> – Customers (acquire for revenue & channel growth)</li>
                 <li><strong>🔴 Red Squares</strong> – Market obstacles (avoid!)</li>
-                <li><strong>✨ Colored Circles</strong> – Power-ups (collect for competitive advantages)</li>
+                <li><strong>✨ Colored Circles with Emojis</strong> – Power-ups (collect for competitive advantages)</li>
                 <li>Grow your company by acquiring customers while managing expansion</li>
                 <li>Each customer = channel traffic growth. Reach 10k monthly users to unlock premium Tribe Credits!</li>
                 <li>Hit milestones (1K, 5K, 10K, 50K, 100K users) for bonus rewards 🎯</li>
@@ -724,13 +737,21 @@
         const GRID_COUNT_X = Math.floor(CANVAS_WIDTH / GRID_SIZE);
         const GRID_COUNT_Y = Math.floor(CANVAS_HEIGHT / GRID_SIZE);
 
-        // Power-up types
+        // Power-up types with emoji icons
         const POWERUP_TYPES = {
             MENTOR: 'mentor',
             COFOUNDER: 'cofounder',
             ADVISOR: 'advisor',
             TRIBE: 'tribe',
             SCALE: 'scale'
+        };
+
+        const POWERUP_EMOJIS = {
+            mentor: '👨‍🏫',
+            cofounder: '👥',
+            advisor: '💼',
+            tribe: '🌟',
+            scale: '📈'
         };
 
         // Channel milestones
@@ -1061,4 +1082,94 @@
 
         function endGame(message) {
             gameRunning = false;
-            game
+            gameOver = true;
+            gameOverDiv.classList.add('show');
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('finalSize').textContent = snake.length;
+            document.getElementById('finalCustomers').textContent = Math.floor(score / 10);
+            const totalPowerups = Object.values(acquiredPowerups).reduce((a, b) => a + b, 0);
+            document.getElementById('finalPowerups').textContent = totalPowerups;
+            document.getElementById('finalMonthlyUsers').textContent = monthlyUsers.toLocaleString();
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+        }
+
+        function updateDisplay() {
+            sizeDisplay.textContent = snake.length;
+            customersDisplay.textContent = Math.floor(score / 10);
+            scoreDisplay.textContent = score;
+            updateChannelDisplay();
+        }
+
+        function render() {
+            gameCanvas.innerHTML = '';
+
+            // Render obstacles
+            obstacles.forEach(obstacle => {
+                const div = document.createElement('div');
+                div.className = 'obstacle';
+                div.style.left = obstacle.x * GRID_SIZE + 'px';
+                div.style.top = obstacle.y * GRID_SIZE + 'px';
+                div.textContent = '🚧';
+                gameCanvas.appendChild(div);
+            });
+
+            // Render customers
+            customers.forEach(customer => {
+                const div = document.createElement('div');
+                div.className = 'customer';
+                div.style.left = customer.x * GRID_SIZE + 'px';
+                div.style.top = customer.y * GRID_SIZE + 'px';
+                div.textContent = '👤';
+                gameCanvas.appendChild(div);
+            });
+
+            // Render power-ups
+            powerups.forEach(powerup => {
+                const div = document.createElement('div');
+                div.className = `powerup ${powerup.type}`;
+                div.style.left = powerup.x * GRID_SIZE + 'px';
+                div.style.top = powerup.y * GRID_SIZE + 'px';
+                div.textContent = POWERUP_EMOJIS[powerup.type];
+                gameCanvas.appendChild(div);
+            });
+
+            // Render snake
+            snake.forEach((segment, index) => {
+                const div = document.createElement('div');
+                div.className = 'snake-segment' + (index === 0 ? ' head' : '');
+                div.style.left = segment.x * GRID_SIZE + 'px';
+                div.style.top = segment.y * GRID_SIZE + 'px';
+                gameCanvas.appendChild(div);
+            });
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning || gameOver) return;
+
+            const key = e.key.toUpperCase();
+            const arrows = {
+                'ARROWUP': { x: 0, y: -1 },
+                'ARROWDOWN': { x: 0, y: 1 },
+                'ARROWLEFT': { x: -1, y: 0 },
+                'ARROWRIGHT': { x: 1, y: 0 },
+                'W': { x: 0, y: -1 },
+                'S': { x: 0, y: 1 },
+                'A': { x: -1, y: 0 },
+                'D': { x: 1, y: 0 }
+            };
+
+            if (arrows[key]) {
+                e.preventDefault();
+                if (direction.x !== -arrows[key].x || direction.y !== -arrows[key].y) {
+                    nextDirection = arrows[key];
+                }
+            }
+        });
+
+        // Initialize
+        initGame();
+    </script>
+</body>
+</html>
