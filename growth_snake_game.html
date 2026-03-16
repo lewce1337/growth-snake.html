@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Growth Snake – A Startup Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            margin: 20px auto;
+            overflow: hidden;
+        }
+
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        .snake-segment {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .snake-segment.head {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            box-shadow: 0 0 10px rgba(255, 107, 107, 0.6);
+            border-radius: 50%;
+        }
+
+        .customer {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: radial-gradient(circle at 30% 30%, #ffd93d, #ff9800);
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(255, 152, 0, 0.6);
+            animation: pulse 0.8s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .obstacle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(231, 76, 60, 0.6);
+        }
+
+        .market-zone {
+            position: absolute;
+            border: 2px dashed #4caf50;
+            border-radius: 5px;
+            opacity: 0.3;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .stat {
+            background: #f0f0f0;
+            padding: 15px 25px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .controls {
+            margin: 20px 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #startBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        #startBtn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #pauseBtn {
+            background: #ff9800;
+            color: white;
+        }
+
+        #pauseBtn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.4);
+        }
+
+        #resetBtn {
+            background: #f44336;
+            color: white;
+        }
+
+        #resetBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            z-index: 10;
+            text-align: center;
+            display: none;
+        }
+
+        .game-over.show {
+            display: block;
+            animation: popIn 0.3s ease;
+        }
+
+        @keyframes popIn {
+            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .game-over h2 {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .game-over p {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        .instructions {
+            text-align: left;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 0.9em;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 15px 0;
+            font-size: 0.85em;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            width: 15px;
+            height: 15px;
+            border-radius: 2px;
+        }
+
+        .legend-box.customer {
+            background: #ff9800;
+            border-radius: 50%;
+        }
+
+        .legend-box.obstacle {
+            background: #e74c3c;
+        }
+
+        .responsive-note {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐍 Growth Snake</h1>
+        <p class="subtitle">A Startup Founder's Journey</p>
+
+        <div id="gameContainer">
+            <div class="game-canvas" id="gameCanvas"></div>
+            <div class="game-over" id="gameOver">
+                <h2>Game Over! 💔</h2>
+                <p id="gameOverMessage"></p>
+                <p>Final Size: <strong id="finalSize">0</strong></p>
+                <p>Customers Acquired: <strong id="finalCustomers">0</strong></p>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box customer"></div>
+                <span>Customer (Revenue)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box obstacle"></div>
+                <span>Market Obstacle</span>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Company Size</div>
+                <div class="stat-value" id="size">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Customers</div>
+                <div class="stat-value" id="customers">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+        </div>
+
+        <div class="instructions">
+            <strong>📖 How to Play:</strong>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li><strong>Arrow Keys or WASD</strong> – Move your startup</li>
+                <li><strong>🟠 Orange Dots</strong> – Customers (eat for revenue)</li>
+                <li><strong>🔴 Red Squares</strong> – Market obstacles (avoid!)</li>
+                <li>Grow your company by acquiring customers, but don't hit obstacles or yourself</li>
+                <li>The longer you grow, the harder it is to navigate – manage your expansion!</li>
+            </ul>
+        </div>
+
+        <div class="buttons">
+            <button id="startBtn" onclick="startGame()">Start Game</button>
+            <button id="pauseBtn" onclick="togglePause()" disabled>Pause</button>
+            <button id="resetBtn" onclick="resetGame()">Reset</button>
+        </div>
+
+        <p class="responsive-note">💡 Works best on desktop. Use arrow keys to play.</p>
+    </div>
+
+    <script>
+        const GRID_SIZE = 20;
+        const CANVAS_WIDTH = 400;
+        const CANVAS_HEIGHT = 400;
+        const GRID_COUNT = CANVAS_WIDTH / GRID_SIZE;
+
+        let snake = [];
+        let direction = { x: 1, y: 0 };
+        let nextDirection = { x: 1, y: 0 };
+        let customers = [];
+        let obstacles = [];
+        let score = 0;
+        let gameRunning = false;
+        let gamePaused = false;
+        let gameOver = false;
+        let gameSpeed = 100;
+
+        const gameCanvas = document.getElementById('gameCanvas');
+        const sizeDisplay = document.getElementById('size');
+        const customersDisplay = document.getElementById('customers');
+        const scoreDisplay = document.getElementById('score');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const gameOverDiv = document.getElementById('gameOver');
+
+        function initGame() {
+            snake = [
+                { x: 10, y: 10 },
+                { x: 9, y: 10 },
+                { x: 8, y: 10 }
+            ];
+            direction = { x: 1, y: 0 };
+            nextDirection = { x: 1, y: 0 };
+            customers = [];
+            obstacles = [];
+            score = 0;
+            gameSpeed = 100;
+            gameOver = false;
+            gamePaused = false;
+
+            generateCustomers(5);
+            generateObstacles(8);
+            updateDisplay();
+            render();
+        }
+
+        function startGame() {
+            if (!gameRunning) {
+                gameRunning = true;
+                gameOver = false;
+                gameOverDiv.classList.remove('show');
+                startBtn.disabled = true;
+                pauseBtn.disabled = false;
+                initGame();
+                gameLoop();
+            }
+        }
+
+        function togglePause() {
+            if (gameRunning) {
+                gamePaused = !gamePaused;
+                pauseBtn.textContent = gamePaused ? 'Resume' : 'Pause';
+            }
+        }
+
+        function resetGame() {
+            gameRunning = false;
+            gamePaused = false;
+            gameOver = false;
+            gameOverDiv.classList.remove('show');
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+            pauseBtn.textContent = 'Pause';
+            gameCanvas.innerHTML = '';
+            initGame();
+        }
+
+        function generateCustomers(count) {
+            for (let i = 0; i < count; i++) {
+                let customer;
+                do {
+                    customer = {
+                        x: Math.floor(Math.random() * GRID_COUNT),
+                        y: Math.floor(Math.random() * GRID_COUNT)
+                    };
+                } while (isOccupied(customer));
+                customers.push(customer);
+            }
+        }
+
+        function generateObstacles(count) {
+            for (let i = 0; i < count; i++) {
+                let obstacle;
+                do {
+                    obstacle = {
+                        x: Math.floor(Math.random() * GRID_COUNT),
+                        y: Math.floor(Math.random() * GRID_COUNT)
+                    };
+                } while (isOccupied(obstacle));
+                obstacles.push(obstacle);
+            }
+        }
+
+        function isOccupied(pos) {
+            if (snake.some(s => s.x === pos.x && s.y === pos.y)) return true;
+            if (customers.some(c => c.x === pos.x && c.y === pos.y)) return true;
+            if (obstacles.some(o => o.x === pos.x && o.y === pos.y)) return true;
+            return false;
+        }
+
+        function gameLoop() {
+            if (!gamePaused) {
+                update();
+                render();
+                gameSpeed = Math.max(50, 100 - snake.length);
+            }
+            if (gameRunning) {
+                setTimeout(gameLoop, gameSpeed);
+            }
+        }
+
+        function update() {
+            direction = nextDirection;
+
+            const head = snake[0];
+            const newHead = {
+                x: head.x + direction.x,
+                y: head.y + direction.y
+            };
+
+            // Check collision with walls
+            if (newHead.x < 0 || newHead.x >= GRID_COUNT || newHead.y < 0 || newHead.y >= GRID_COUNT) {
+                endGame('You hit a wall! 💥');
+                return;
+            }
+
+            // Check collision with self
+            if (snake.some(s => s.x === newHead.x && s.y === newHead.y)) {
+                endGame('Overexpansion! You collapsed into yourself. 😵');
+                return;
+            }
+
+            // Check collision with obstacles
+            if (obstacles.some(o => o.x === newHead.x && o.y === newHead.y)) {
+                endGame('Market disruption! You hit an obstacle. 🚧');
+                return;
+            }
+
+            snake.unshift(newHead);
+
+            // Check if ate customer
+            const customerIndex = customers.findIndex(c => c.x === newHead.x && c.y === newHead.y);
+            if (customerIndex !== -1) {
+                customers.splice(customerIndex, 1);
+                score += 10 * snake.length;
+                generateCustomers(1);
+            } else {
+                snake.pop();
+            }
+
+            updateDisplay();
+        }
+
+        function endGame(message) {
+            gameRunning = false;
+            gameOver = true;
+            gameOverDiv.classList.add('show');
+            document.getElementById('gameOverMessage').textContent = message;
+            document.getElementById('finalSize').textContent = snake.length;
+            document.getElementById('finalCustomers').textContent = customers.length === 5 ? Math.floor(score / 10) : Math.floor(score / 10);
+            startBtn.disabled = false;
+            pauseBtn.disabled = true;
+        }
+
+        function updateDisplay() {
+            sizeDisplay.textContent = snake.length;
+            customersDisplay.textContent = Math.floor(score / 10);
+            scoreDisplay.textContent = score;
+        }
+
+        function render() {
+            gameCanvas.innerHTML = '';
+
+            // Render obstacles
+            obstacles.forEach(obstacle => {
+                const div = document.createElement('div');
+                div.className = 'obstacle';
+                div.style.left = obstacle.x * GRID_SIZE + 'px';
+                div.style.top = obstacle.y * GRID_SIZE + 'px';
+                gameCanvas.appendChild(div);
+            });
+
+            // Render customers
+            customers.forEach(customer => {
+                const div = document.createElement('div');
+                div.className = 'customer';
+                div.style.left = customer.x * GRID_SIZE + 'px';
+                div.style.top = customer.y * GRID_SIZE + 'px';
+                gameCanvas.appendChild(div);
+            });
+
+            // Render snake
+            snake.forEach((segment, index) => {
+                const div = document.createElement('div');
+                div.className = 'snake-segment' + (index === 0 ? ' head' : '');
+                div.style.left = segment.x * GRID_SIZE + 'px';
+                div.style.top = segment.y * GRID_SIZE + 'px';
+                gameCanvas.appendChild(div);
+            });
+        }
+
+        // Keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning || gameOver) return;
+
+            const key = e.key.toUpperCase();
+            const arrows = {
+                'ARROWUP': { x: 0, y: -1 },
+                'ARROWDOWN': { x: 0, y: 1 },
+                'ARROWLEFT': { x: -1, y: 0 },
+                'ARROWRIGHT': { x: 1, y: 0 },
+                'W': { x: 0, y: -1 },
+                'S': { x: 0, y: 1 },
+                'A': { x: -1, y: 0 },
+                'D': { x: 1, y: 0 }
+            };
+
+            if (arrows[key]) {
+                e.preventDefault();
+                // Prevent reversing into self
+                if (direction.x !== -arrows[key].x || direction.y !== -arrows[key].y) {
+                    nextDirection = arrows[key];
+                }
+            }
+        });
+
+        // Initialize
+        initGame();
+    </script>
+</body>
+</html>
